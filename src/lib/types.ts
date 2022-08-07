@@ -84,6 +84,7 @@ export interface Options {
   tags?: string;
   'target-reference'?: string;
   'exclude-base-image-vulns'?: boolean;
+  supportSnykNewUnmanagedTest?: boolean;
   'no-markdown'?: boolean;
   'max-depth'?: number;
   report?: boolean;
