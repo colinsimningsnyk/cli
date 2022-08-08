@@ -17,6 +17,7 @@ import { IacOrgSettings } from '../../../../cli/commands/test/iac/local-executio
 import { convertEngineToSarifResults } from './sarif';
 import { CustomError, FormattedCustomError } from '../../../errors';
 import { SnykIacTestError } from './errors';
+import stripAnsi from 'strip-ansi';
 
 export function buildOutput({
   scanResult,
@@ -103,15 +104,11 @@ function buildTestCommandResultData({
   const isPartialSuccess =
     scanResult.results?.resources?.length || !scanResult.errors?.length;
   if (!isPartialSuccess) {
-    if (options.json || options.sarif) {
-      throw new NoSuccessfulScansJsonAndSarifError(
-        { response: responseData, json: jsonData, sarif: sarifData },
-        scanResult.errors!,
-        !options.sarif,
-      );
-    } else {
-      throw new NoSuccessfulScansTextError(responseData, scanResult.errors!);
-    }
+    throw new NoSuccessfulScansError(
+      { response: responseData, json: jsonData, sarif: sarifData },
+      scanResult.errors!,
+      options,
+    );
   }
 
   return { responseData, jsonData, sarifData };
@@ -166,44 +163,38 @@ interface ResponseData {
   sarif: string;
 }
 
-export class NoSuccessfulScansTextError extends FormattedCustomError {
-  constructor(response: string, errors: SnykIacTestError[]) {
-    super(
-      response,
-      formatIacTestFailures(
-        errors.map((scanError) => ({
-          failureReason: scanError.userMessage,
-          filePath: scanError.fields.path,
-        })),
-      ),
-    );
-
-    const firstErr = errors[0];
-    this.strCode = firstErr.strCode;
-    this.code = firstErr.code;
-  }
-}
-
-export class NoSuccessfulScansJsonAndSarifError extends CustomError {
-  public json: string;
-  public jsonStringifiedResults: string;
-  public sarifStringifiedResults: string;
+export class NoSuccessfulScansError extends FormattedCustomError {
+  public json: string | undefined;
+  public jsonStringifiedResults: string | undefined;
+  public sarifStringifiedResults: string | undefined;
 
   constructor(
     responseData: ResponseData,
     errors: SnykIacTestError[],
-    isJson: boolean,
+    options: { json?: boolean; sarif?: boolean },
   ) {
-    super(responseData.response);
+    const isText = !options.json && !options.sarif;
+    super(
+      responseData.response,
+      isText
+        ? formatIacTestFailures(
+            errors.map((scanError) => ({
+              failureReason: scanError.userMessage,
+              filePath: scanError.fields.path,
+            })),
+          )
+        : stripAnsi(responseData.response),
+    );
 
     const firstErr = errors[0];
     this.strCode = firstErr.strCode;
-    this.json = responseData.response;
-    this.jsonStringifiedResults = responseData.json;
-    this.sarifStringifiedResults = responseData.sarif;
-
-    if (isJson) {
+    if (!options.sarif) {
       this.code = firstErr.code;
+    }
+    if (!isText) {
+      this.json = responseData.response;
+      this.jsonStringifiedResults = responseData.json;
+      this.sarifStringifiedResults = responseData.sarif;
     }
   }
 }
