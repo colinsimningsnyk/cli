@@ -83,6 +83,16 @@ function buildTestCommandResultData({
     convertEngineToSarifResults(scanResult),
   );
 
+  const isPartialSuccess =
+    scanResult.results?.resources?.length || !scanResult.errors?.length;
+  if (!isPartialSuccess) {
+    throw new NoSuccessfulScansError(
+      { json: jsonData, sarif: sarifData },
+      scanResult.errors!,
+      options,
+    );
+  }
+
   let responseData: string;
   if (options.json) {
     responseData = jsonData;
@@ -99,16 +109,6 @@ function buildTestCommandResultData({
       json: jsonData,
       sarif: sarifData,
     });
-  }
-
-  const isPartialSuccess =
-    scanResult.results?.resources?.length || !scanResult.errors?.length;
-  if (!isPartialSuccess) {
-    throw new NoSuccessfulScansError(
-      { response: responseData, json: jsonData, sarif: sarifData },
-      scanResult.errors!,
-      options,
-    );
   }
 
   return { responseData, jsonData, sarifData };
@@ -169,13 +169,19 @@ export class NoSuccessfulScansError extends FormattedCustomError {
   public sarifStringifiedResults: string | undefined;
 
   constructor(
-    responseData: ResponseData,
+    responseData: Omit<ResponseData, 'response'>,
     errors: SnykIacTestError[],
     options: { json?: boolean; sarif?: boolean },
   ) {
+    const firstErr = errors[0];
     const isText = !options.json && !options.sarif;
+    const message = options.json
+      ? responseData.json
+      : options.sarif
+      ? responseData.sarif
+      : firstErr.message;
     super(
-      responseData.response,
+      message,
       isText
         ? formatIacTestFailures(
             errors.map((scanError) => ({
@@ -183,16 +189,14 @@ export class NoSuccessfulScansError extends FormattedCustomError {
               filePath: scanError.fields.path,
             })),
           )
-        : stripAnsi(responseData.response),
+        : stripAnsi(message),
     );
-
-    const firstErr = errors[0];
     this.strCode = firstErr.strCode;
     if (!options.sarif) {
       this.code = firstErr.code;
     }
     if (!isText) {
-      this.json = responseData.response;
+      this.json = message;
       this.jsonStringifiedResults = responseData.json;
       this.sarifStringifiedResults = responseData.sarif;
     }
