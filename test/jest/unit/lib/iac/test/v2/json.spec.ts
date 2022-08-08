@@ -7,7 +7,7 @@ import {
 } from '../../../../../../../src/lib/iac/test/v2/json';
 import {
   ScanError,
-  SnykIacTestOutput,
+  TestOutput,
 } from '../../../../../../../src/lib/iac/test/v2/scan/results';
 
 describe('convertEngineToJsonResults', () => {
@@ -25,9 +25,7 @@ describe('convertEngineToJsonResults', () => {
     ),
     'utf-8',
   );
-  const snykIacTestFixture: SnykIacTestOutput = JSON.parse(
-    snykIacTestFixtureContent,
-  );
+  const snykIacTestFixture: TestOutput = JSON.parse(snykIacTestFixtureContent);
 
   const experimentalJsonOutputFixtureContent = fs.readFileSync(
     path.join(
