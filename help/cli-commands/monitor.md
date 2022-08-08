@@ -10,6 +10,8 @@ The `snyk monitor` command creates a project in your Snyk account to be continuo
 
 For Snyk Container see [`snyk container` help](https://docs.snyk.io/snyk-cli/commands/container)
 
+The `monitor` command is not supported for Snyk Code.
+
 For Snyk Infrastructure as Code follow the instructions in "Regularly testing IaC files" on [Snyk CLI for Infrastructure as Code](https://docs.snyk.io/products/snyk-infrastructure-as-code/snyk-cli-for-infrastructure-as-code)
 
 ## Exit codes
@@ -86,6 +88,8 @@ Set a default to ensure all newly monitored projects are created under your defa
 
 Default: `<ORG_ID>` that is the current preferred organization in your [Account settings](https://app.snyk.io/account)
 
+Note that you can also use `--org=<orgslugname>`. The `ORG_ID` works in both the CLI and the API. The organization slug name works in the CLI, but not in the API.
+
 For more information see the article [How to select the organization to use in the CLI](https://support.snyk.io/hc/en-us/articles/360000920738-How-to-select-the-organization-to-use-in-the-CLI)
 
 ### `--file=<FILE>`
@@ -104,7 +108,7 @@ Example: `$ snyk monitor --file=req.txt --package-manager=pip`
 
 For C++ only, scan all files for known open source dependencies.
 
-For options you can use with `--unmanaged` see [Options for scanning using `--unmanaged`](https://docs.snyk.io/snyk-cli/commands/monitor#options-for-scanning-using-unmanaged)\`\`
+For options you can use with `--unmanaged` see [Options for scanning using `--unmanaged`](https://docs.snyk.io/snyk-cli/commands/monitor#options-for-scanning-using-unmanaged)
 
 For more information see [Snyk for C/C++](https://docs.snyk.io/products/snyk-open-source/language-and-package-manager-support/snyk-for-c-c++)\`\`
 
